@@ -53,7 +53,5 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = libs.versions.gradleVersion.get()
     distributionType = Wrapper.DistributionType.ALL
 }
-

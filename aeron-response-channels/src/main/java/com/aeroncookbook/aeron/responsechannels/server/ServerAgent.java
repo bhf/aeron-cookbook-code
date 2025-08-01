@@ -17,10 +17,7 @@
 package com.aeroncookbook.aeron.responsechannels.server;
 
 import com.aeroncookbook.aeron.responsechannels.Constants;
-import io.aeron.Aeron;
-import io.aeron.Image;
-import io.aeron.Publication;
-import io.aeron.Subscription;
+import io.aeron.*;
 import org.agrona.CloseHelper;
 import org.agrona.collections.Long2LongHashMap;
 import org.agrona.collections.Long2ObjectHashMap;
@@ -43,6 +40,7 @@ public class ServerAgent implements Agent
     private final Map<Long, Publication> clientConnections = new Long2ObjectHashMap<>();
     private final Map<Long, Long> pendingPubIdToCorrelationId = new Long2LongHashMap(128);
     private final Set<Long> pendingResponsePublications = new LongHashSet();
+    private boolean createResponsePubAsync = false;
 
     public ServerAgent(final Aeron aeron, final ShutdownSignalBarrier barrier)
     {
@@ -85,7 +83,11 @@ public class ServerAgent implements Agent
         }
 
         processPendingResponseChannelCreations();
-        processPendingPublications();
+
+        if (createResponsePubAsync)
+        {
+            processPendingPublications();
+        }
 
         return requestSubscription.poll(serverAdapter, 1);
     }
@@ -128,15 +130,30 @@ public class ServerAgent implements Agent
             final var responseCorrelation = "response-correlation-id=" + correlationId;
             final var responseTag = "tags=1," + correlationId;
 
-            final Long registrationId = aeron.asyncAddPublication(
-                "aeron:udp?endpoint=localhost:10001|"+responseCorrelation+"|"+responseTag,
-                Constants.RESPONSE_STREAM_ID);
+            if (createResponsePubAsync)
+            {
+                final Long registrationId = aeron.asyncAddPublication(
+                    "aeron:udp?endpoint=localhost:10001|" + responseCorrelation + "|" + responseTag,
+                    Constants.RESPONSE_STREAM_ID);
 
-            log.info("Creating response publication for correlation Id {}, registrationId {}",
-                correlationId, registrationId);
+                log.info("Creating response publication for correlation Id {}, registrationId {}",
+                    correlationId, registrationId);
 
-            pendingPubIdToCorrelationId.put(registrationId, correlationId);
-            pendingResponsePublications.remove(correlationId);
+                pendingPubIdToCorrelationId.put(registrationId, correlationId);
+                pendingResponsePublications.remove(correlationId);
+            }
+            else
+            {
+                final ConcurrentPublication publication = aeron.addPublication(
+                    "aeron:udp?endpoint=localhost:10001|control=localhost:10002|" +
+                    responseCorrelation + "|" + responseTag,
+                    Constants.RESPONSE_STREAM_ID);
+
+                clientConnections.put(correlationId, publication);
+                pendingResponsePublications.remove(correlationId);
+
+                log.info("Created response publication for correlation Id {}", responseCorrelation);
+            }
         });
     }
 

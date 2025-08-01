@@ -55,7 +55,7 @@ public class ServerAgent implements Agent
     {
         log.info("Server starting");
         requestSubscription = aeron.addSubscription(
-                "aeron:udp?endpoint=localhost:10001",
+                "aeron:udp?endpoint=localhost:10001|tags=1",
                 Constants.REQUEST_STREAM_ID,
                 this::handleConnect,
                 this::handleDisconnect);
@@ -125,8 +125,11 @@ public class ServerAgent implements Agent
     {
         pendingResponsePublications.forEach(correlationId ->
         {
+            final var responseCorrelation = "response-correlation-id=" + correlationId;
+            final var responseTag = "tags=1," + correlationId;
+
             final Long registrationId = aeron.asyncAddPublication(
-                "aeron:udp?endpoint=localhost:10001|response-correlation-id=" + correlationId,
+                "aeron:udp?endpoint=localhost:10001|"+responseCorrelation+"|"+responseTag,
                 Constants.RESPONSE_STREAM_ID);
 
             log.info("Creating response publication for correlation Id {}, registrationId {}",

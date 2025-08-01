@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-rootProject.name = "aeron-cookbook"
+package com.aeroncookbook.aeron.responsechannels;
 
-include ("sbe-core", "sbe-protocol", "archive-core", "async", "ipc-core", "aeron-core", "cluster-rsm",
-    "theory", "agrona", "archive-multi-host:archive-host", "archive-multi-host:archive-client",
-    "archive-replication:archive-client", "archive-replication:archive-host", "archive-replication:archive-backup",
-    "archive-replication:common", "aeron-mdc:aeron-mdc-publisher", "aeron-mdc:aeron-mdc-subscriber",
-    "rfq:cluster", "rfq:cluster-protocol", "rfq:admin", "aeron-response-channels")
+public final class Constants
+{
+    public static final int REQUEST_STREAM_ID = 1;
+    public static final int RESPONSE_STREAM_ID = 2;
+
+    private Constants()
+    {
+        //nothing
+    }
+}

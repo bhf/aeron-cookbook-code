@@ -99,7 +99,7 @@ public class ClientAgent implements Agent
     private void createRequestPublication()
     {
         requestPublication = aeron.addExclusivePublication(
-                "aeron:udp?endpoint=localhost:10001", Constants.REQUEST_STREAM_ID);
+                "aeron:udp?endpoint=localhost:10001|alias=ClientRequestPub", Constants.REQUEST_STREAM_ID);
 
         while (!requestPublication.isConnected())
         {
@@ -109,7 +109,7 @@ public class ClientAgent implements Agent
         log.info("request publication connected");
 
         responseSubscription = aeron.addSubscription(
-            "aeron:udp?control-mode=response|control=localhost:10002",
+            "aeron:udp?control-mode=response|control=localhost:10002|alias=ClientResponseSub",
                 Constants.RESPONSE_STREAM_ID);
     }
 
